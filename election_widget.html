@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Election Process Education Assistant</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #e5e7eb;
+  box-sizing: border-box;
+}
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+
+.ep-widget {
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #F3F4F6;
+  --color-border-tertiary: #E5E7EB;
+  --color-border-secondary: #D1D5DB;
+  --color-background-info: #EFF6FF;
+  --color-text-info: #1D4ED8;
+  --color-background-success: #F0FDF4;
+  --color-text-success: #15803D;
+  --color-background-danger: #FEF2F2;
+  --color-text-danger: #B91C1C;
+  --border-radius-md: 6px;
+  --border-radius-lg: 12px;
+  --color-blue-accent: #185FA5;
+  --color-chip-hover-bg: #E6F1FB;
+  --color-chip-hover-border: #85B7EB;
+  --color-chip-hover-text: #0C447C;
+  
+  display: flex; 
+  width: 100%; 
+  max-width: 100%; 
+  height: 100vh; 
+  max-height: 100vh;
+  font-family: var(--font-sans); 
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+  border: none;
+  border-radius: 0;
+  overflow: hidden; 
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+}
+
+@media (prefers-color-scheme: dark) {
+  body { background-color: #111827; }
+  .ep-widget {
+    --color-text-primary: #F9FAFB;
+    --color-text-secondary: #9CA3AF;
+    --color-background-primary: #1F2937;
+    --color-background-secondary: #111827;
+    --color-border-tertiary: #374151;
+    --color-border-secondary: #4B5563;
+    --color-background-info: #1E3A8A;
+    --color-text-info: #BFDBFE;
+    --color-background-success: #064E3B;
+    --color-text-success: #86EFAC;
+    --color-background-danger: #7F1D1D;
+    --color-text-danger: #FCA5A5;
+    --color-chip-hover-bg: #1E3A8A;
+    --color-chip-hover-border: #3B82F6;
+    --color-chip-hover-text: #DBEAFE;
+  }
+}
+
+.ep-widget b, .ep-widget strong { font-weight: 500; }
+svg { pointer-events: none; }
+
+.ep-sidebar {
+  width: 200px; 
+  flex-shrink: 0;
+  z-index: 10;
+  background: var(--color-background-secondary);
+  border-right: 0.5px solid var(--color-border-tertiary);
+  display: flex; 
+  flex-direction: column;
+}
+
+.ep-main {
+  flex: 1; 
+  min-width: 0;
+  display: flex; 
+  flex-direction: column;
+  background: var(--color-background-primary);
+}
+
+.ep-topbar {
+  padding: 16px; border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+
+.ep-content-area {
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px 16px 16px; 
+  box-sizing: border-box;
+  overflow: hidden; 
+}
+
+.ep-nav { padding: 8px 0; flex: 1; }
+
+.ep-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 16px; font-size: 13px; font-weight: 400;
+  color: var(--color-text-secondary); background: transparent;
+  border: none; border-left: 3px solid transparent;
+  cursor: pointer; text-align: left; transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+.ep-nav-item:hover { background: var(--color-background-secondary); }
+.ep-nav-item.active {
+  color: var(--color-blue-accent); border-left-color: var(--color-blue-accent);
+  background: var(--color-chip-hover-bg);
+}
+.ep-nav-item svg { width: 16px; height: 16px; fill: currentColor; }
+
+.ep-section { 
+  display: none; 
+  width: 100%;
+  height: 100%;
+}
+.ep-section.active { 
+  display: block; 
+  overflow-y: auto;
+  padding-right: 4px;
+}
+#sec-askai.active {
+  display: flex;
+  flex-direction: column;
+  overflow-y: hidden; 
+}
+
+.ep-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 14px 16px; margin-bottom: 12px;
+}
+.ep-card-title { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.ep-card-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; }
+
+.ep-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+.ep-stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px; text-align: center; }
+.ep-stat-num { font-size: 22px; color: var(--color-blue-accent); font-weight: 500; }
+.ep-stat-label { font-size: 11px; color: var(--color-text-secondary); font-weight: 500; margin-top: 4px; }
+
+.ep-btn-primary {
+  background: var(--color-blue-accent); color: #ffffff;
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 8px 16px; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: opacity 0.15s ease;
+  display: block; text-align: center; width: 100%;
+}
+.ep-btn-primary:hover { opacity: 0.9; }
+
+.ep-chip-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.ep-chip {
+  padding: 6px 12px; font-size: 13px; font-weight: 400;
+  color: var(--color-text-secondary); background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md); cursor: pointer; transition: all 0.15s ease;
+}
+.ep-chip:hover, .ep-chip.selected {
+  background: var(--color-chip-hover-bg); border-color: var(--color-chip-hover-border);
+  color: var(--color-chip-hover-text);
+}
+
+.ep-timeline { position: relative; padding-left: 24px; margin-top: 16px; }
+.ep-timeline::before { content: ''; position: absolute; left: 11px; top: 8px; bottom: 8px; width: 2px; background: var(--color-border-tertiary); }
+.ep-tl-item { position: relative; margin-bottom: 20px; }
+.ep-tl-node {
+  position: absolute; left: -24px; top: 2px; width: 24px; height: 24px;
+  border-radius: 50%; background: var(--color-background-primary);
+  border: 2px solid var(--color-blue-accent); color: var(--color-blue-accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500; z-index: 1;
+}
+.ep-tl-node.filled { background: var(--color-blue-accent); color: #ffffff; }
+.ep-tl-node.teal { border-color: #0D9488; color: #0D9488; }
+.ep-tl-node.teal.filled { background: #0D9488; color: #ffffff; }
+
+.ep-tl-content { padding-left: 12px; }
+.ep-tl-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ep-tl-desc { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.ep-badge { display: inline-flex; align-items: center; font-size: 12px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+.ep-badge.blue { background: var(--color-background-info); color: var(--color-text-info); }
+.ep-badge.teal { background: #E0F2FE; color: #0369A1; } 
+.ep-badge.amber { background: #FEF3C7; color: #B45309; }
+.ep-badge.green { background: var(--color-background-success); color: var(--color-text-success); }
+.ep-badge.filled-blue { background: var(--color-blue-accent); color: #ffffff; }
+
+.ep-quiz-progress { height: 6px; background: var(--color-border-tertiary); border-radius: 3px; overflow: hidden; margin-bottom: 16px; }
+.ep-quiz-bar { height: 100%; background: var(--color-blue-accent); width: 0%; transition: width 0.3s ease; }
+.ep-quiz-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 16px; font-weight: 500; }
+.ep-quiz-question { font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+.ep-quiz-option {
+  width: 100%; text-align: left; padding: 12px 16px; font-size: 13px; font-weight: 400;
+  background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md); margin-bottom: 8px; cursor: pointer; transition: all 0.15s ease;
+  color: var(--color-text-primary); display: block;
+}
+.ep-quiz-option:hover:not(:disabled) { background: var(--color-background-secondary); }
+.ep-quiz-option.correct { background: var(--color-background-success); border-color: var(--color-text-success); color: var(--color-text-success); }
+.ep-quiz-option.wrong { background: var(--color-background-danger); border-color: var(--color-text-danger); color: var(--color-text-danger); }
+.ep-quiz-feedback { padding: 12px; border-radius: var(--border-radius-md); font-size: 13px; margin-top: 16px; display: none; }
+.ep-quiz-feedback.success { background: var(--color-background-success); color: var(--color-text-success); border: 0.5px solid var(--color-text-success); }
+.ep-quiz-feedback.danger { background: var(--color-background-danger); color: var(--color-text-danger); border: 0.5px solid var(--color-text-danger); }
+
+.ep-search {
+  width: 100%; padding: 8px 12px; font-size: 13px; font-weight: 400;
+  border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md);
+  background: var(--color-background-primary); color: var(--color-text-primary);
+  margin-bottom: 16px; box-sizing: border-box; font-family: var(--font-sans);
+}
+.ep-search:focus { outline: 1px solid var(--color-blue-accent); }
+.ep-term { font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+.ep-term-name { color: var(--color-blue-accent); font-weight: 500; }
+.ep-term-def { color: var(--color-text-secondary); }
+
+.ep-chat-container { display: flex; flex-direction: column; height: 100%; width: 100%; }
+.ep-chat-messages { flex: 1; overflow-y: auto; margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; padding-right: 8px; }
+.ep-message { display: flex; gap: 12px; animation: epFadeIn 0.25s ease-out forwards; }
+@keyframes epFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.ep-avatar {
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500; flex-shrink: 0;
+}
+.ep-avatar-ai { background: var(--color-background-info); color: var(--color-text-info); }
+.ep-avatar-user { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.ep-msg-bubble {
+  background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg); padding: 10px 14px; font-size: 13px; line-height: 1.5; color: var(--color-text-primary);
+  overflow-wrap: break-word;
+}
+.ep-msg-bubble ol, .ep-msg-bubble ul { margin: 8px 0; padding-left: 20px; }
+.ep-chat-input-area {
+  position: relative; display: flex; align-items: flex-end; gap: 8px;
+  background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md); padding: 8px;
+}
+.ep-chat-textarea {
+  flex: 1; border: none; resize: none; max-height: 100px; min-height: 20px;
+  font-size: 13px; font-weight: 400; font-family: var(--font-sans);
+  background: transparent; color: var(--color-text-primary); outline: none;
+}
+.ep-chat-send {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--color-blue-accent); color: #ffffff;
+  border: 0.5px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: opacity 0.15s ease;
+}
+.ep-chat-send:hover { opacity: 0.9; }
+.ep-chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+.ep-typing { display: flex; gap: 4px; padding: 10px 14px; }
+.ep-dot { width: 6px; height: 6px; background: var(--color-text-secondary); border-radius: 50%; animation: epPulse 1.4s infinite both; }
+.ep-dot:nth-child(1) { animation-delay: -0.32s; }
+.ep-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes epPulse { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+
+.ep-section::-webkit-scrollbar, .ep-chat-messages::-webkit-scrollbar { width: 6px; }
+.ep-section::-webkit-scrollbar-track, .ep-chat-messages::-webkit-scrollbar-track { background: transparent; }
+.ep-section::-webkit-scrollbar-thumb, .ep-chat-messages::-webkit-scrollbar-thumb { background: var(--color-border-tertiary); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">Election Process Education Assistant</h2>
+<div class="ep-widget">
+  <div class="ep-sidebar">
+    <div style="padding: 16px; border-bottom: 0.5px solid var(--color-border-tertiary);">
+       <div style="font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: var(--color-blue-accent);"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+          ElectionEdu
+       </div>
+       <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">Education Assistant</div>
+    </div>
+    <nav class="ep-nav">
+       <button class="ep-nav-item active" data-target="overview">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg> Overview
+       </button>
+       <button class="ep-nav-item" data-target="timeline">
+          <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg> Timeline
+       </button>
+       <button class="ep-nav-item" data-target="topics">
+          <svg viewBox="0 0 24 24"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg> Key Topics
+       </button>
+       <button class="ep-nav-item" data-target="quiz">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> Quiz
+       </button>
+       <button class="ep-nav-item" data-target="glossary">
+          <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg> Glossary
+       </button>
+       <button class="ep-nav-item" data-target="askai">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg> Ask AI
+       </button>
+    </nav>
+  </div>
+  
+  <div class="ep-main">
+    <div class="ep-topbar">
+       <div id="ep-page-title" style="font-weight: 500; font-size: 15px;">Overview</div>
+       <div id="ep-page-subtitle" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">Your guide to democratic processes</div>
+    </div>
+    <div class="ep-content-area">
+       
+       <!-- OVERVIEW -->
+       <div id="sec-overview" class="ep-section active">
+         <div class="ep-stat-grid">
+           <div class="ep-stat-card"><div class="ep-stat-num">6</div><div class="ep-stat-label">ELECTION PHASES</div></div>
+           <div class="ep-stat-card"><div class="ep-stat-num">50+</div><div class="ep-stat-label">COUNTRIES</div></div>
+           <div class="ep-stat-card"><div class="ep-stat-num">12</div><div class="ep-stat-label">TOPICS</div></div>
+           <div class="ep-stat-card"><div class="ep-stat-num">10</div><div class="ep-stat-label">QUIZ QUESTIONS</div></div>
+         </div>
+         <div class="ep-card">
+           <div class="ep-card-title">What is an election?</div>
+           <div class="ep-card-body">A formal group decision-making process by which a population chooses an individual or multiple individuals to hold public office. Elections have been the usual mechanism by which modern representative democracy has operated since the 17th century.</div>
+         </div>
+         <div class="ep-card">
+           <div class="ep-card-title">6 phases of every election</div>
+           <div class="ep-card-body"><b>1. Announcement</b> &rarr; <b>2. Nomination</b> &rarr; <b>3. Campaign</b> &rarr; <b>4. Voting</b> &rarr; <b>5. Counting</b> &rarr; <b>6. Certification</b></div>
+         </div>
+         <div class="ep-card">
+           <div class="ep-card-title">5 types of elections</div>
+           <div class="ep-card-body">
+             • <b>General:</b> Regular election for candidates<br>
+             • <b>Primary:</b> Internal party selection<br>
+             • <b>Local:</b> Municipal or regional offices<br>
+             • <b>Referendum:</b> Direct vote on a proposal<br>
+             • <b>By-election:</b> Filling a sudden vacancy
+           </div>
+         </div>
+         <button id="btn-explore-timeline" class="ep-btn-primary">Explore the full timeline &rarr;</button>
+       </div>
+
+       <!-- TIMELINE -->
+       <div id="sec-timeline" class="ep-section">
+         <div class="ep-chip-group">
+           <div class="ep-chip ep-tl-chip selected" data-phase="all">All phases</div>
+           <div class="ep-chip ep-tl-chip" data-phase="pre">Pre-election</div>
+           <div class="ep-chip ep-tl-chip" data-phase="election">Election day</div>
+           <div class="ep-chip ep-tl-chip" data-phase="post">Post-election</div>
+         </div>
+         <div class="ep-timeline">
+           <div class="ep-tl-item" data-phase="pre">
+             <div class="ep-tl-node">1</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Election announcement <span class="ep-badge blue">Months–years before</span></div>
+               <div class="ep-tl-desc">The official declaration that an election will take place.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="pre">
+             <div class="ep-tl-node">2</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Voter registration <span class="ep-badge teal">Weeks before deadline</span></div>
+               <div class="ep-tl-desc">Citizens ensure their names are on the electoral roll.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="pre">
+             <div class="ep-tl-node">3</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Candidate nomination <span class="ep-badge amber">Months before</span></div>
+               <div class="ep-tl-desc">Individuals officially declare their intent to run for office.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="pre">
+             <div class="ep-tl-node">4</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Primary / party selection <span class="ep-badge blue">Months before general</span></div>
+               <div class="ep-tl-desc">Parties choose their final candidate for the main election.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="pre">
+             <div class="ep-tl-node">5</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Campaign period <span class="ep-badge amber">Weeks to months</span></div>
+               <div class="ep-tl-desc">Candidates hold rallies, debate, and share their platform.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="election">
+             <div class="ep-tl-node filled">6</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Election day voting <span class="ep-badge filled-blue">Election day</span></div>
+               <div class="ep-tl-desc">Voters cast their ballots at designated polling stations.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="election">
+             <div class="ep-tl-node">7</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Early & absentee voting <span class="ep-badge blue">Days to weeks before</span></div>
+               <div class="ep-tl-desc">Voting options for those who cannot attend on election day.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="post">
+             <div class="ep-tl-node">8</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Vote counting <span class="ep-badge green">Election night / days after</span></div>
+               <div class="ep-tl-desc">Officials tabulate the ballots to determine the winner.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="post">
+             <div class="ep-tl-node">9</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Canvassing & audit <span class="ep-badge amber">Days to weeks after</span></div>
+               <div class="ep-tl-desc">Official review to verify the accuracy of the counted votes.</div>
+             </div>
+           </div>
+           <div class="ep-tl-item" data-phase="post">
+             <div class="ep-tl-node teal filled">10</div>
+             <div class="ep-tl-content">
+               <div class="ep-tl-title">Certification & inauguration <span class="ep-badge teal">Weeks to months later</span></div>
+               <div class="ep-tl-desc">Results are certified and the winner officially assumes office.</div>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- KEY TOPICS -->
+       <div id="sec-topics" class="ep-section">
+         <div class="ep-chip-group">
+           <div class="ep-chip ep-topic-chip" data-topic="voter_registration">Voter registration</div>
+           <div class="ep-chip ep-topic-chip" data-topic="ballot_types">Ballot types</div>
+           <div class="ep-chip ep-topic-chip" data-topic="voting_systems">Voting systems</div>
+           <div class="ep-chip ep-topic-chip" data-topic="electoral_college">Electoral college</div>
+           <div class="ep-chip ep-topic-chip" data-topic="election_integrity">Election integrity</div>
+           <div class="ep-chip ep-topic-chip" data-topic="global_comparison">Global comparison</div>
+         </div>
+         <div id="topic-content" class="ep-card" style="margin-top: 16px;">
+           <!-- JS will populate this -->
+         </div>
+       </div>
+
+       <!-- QUIZ -->
+       <div id="sec-quiz" class="ep-section">
+         <div id="quiz-active">
+           <div class="ep-quiz-progress"><div id="quiz-progress-bar" class="ep-quiz-bar"></div></div>
+           <div class="ep-quiz-header">
+             <span id="quiz-status">Question 1 of 8</span>
+             <span>Score: <span id="quiz-score-count">0</span></span>
+           </div>
+           <div id="quiz-q-text" class="ep-quiz-question"></div>
+           <div id="quiz-options"></div>
+           <div id="quiz-feedback" class="ep-quiz-feedback"></div>
+           <button id="quiz-next" class="ep-btn-primary" style="display: none; margin-top: 16px;">Next question &rarr;</button>
+         </div>
+         <div id="quiz-done" style="display: none; text-align: center; margin-top: 40px;">
+           <div class="ep-stat-num" id="quiz-final-score" style="font-size: 36px;"></div>
+           <div id="quiz-final-msg" style="font-weight: 500; margin: 12px 0;"></div>
+           <button id="quiz-retake" class="ep-btn-primary" style="margin: 24px auto; width: auto;">Retake quiz</button>
+         </div>
+       </div>
+
+       <!-- GLOSSARY -->
+       <div id="sec-glossary" class="ep-section">
+         <input type="text" id="glossary-search" class="ep-search" placeholder="Search terms...">
+         <div id="glossary-list"></div>
+       </div>
+
+       <!-- ASK AI -->
+       <div id="sec-askai" class="ep-section">
+         <div class="ep-chat-container">
+           <div id="api-key-container" style="display: flex; gap: 8px; margin-bottom: 12px; flex-shrink: 0;">
+             <input type="password" id="api-key-input" class="ep-search" style="margin: 0; flex: 1;" placeholder="Enter Anthropic API Key">
+             <button id="api-key-save" class="ep-btn-primary" style="margin: 0; width: auto;">Save</button>
+           </div>
+           <div class="ep-chip-group" style="margin-bottom: 12px; flex-shrink: 0;">
+             <div class="ep-chip ep-ai-chip" data-query="Explain voter registration">Voter registration</div>
+             <div class="ep-chip ep-ai-chip" data-query="What happens on election day?">Election day</div>
+             <div class="ep-chip ep-ai-chip" data-query="How does vote counting work?">Vote counting</div>
+             <div class="ep-chip ep-ai-chip" data-query="What is gerrymandering?">Gerrymandering</div>
+             <div class="ep-chip ep-ai-chip" data-query="Explain the Electoral College">Electoral college</div>
+           </div>
+           <div id="chat-messages" class="ep-chat-messages">
+              <div class="ep-message">
+                <div class="ep-avatar ep-avatar-ai">AI</div>
+                <div class="ep-msg-bubble">Hello! I'm your election education assistant. Ask me anything about democratic processes!</div>
+              </div>
+           </div>
+           <div class="ep-chat-input-area" style="flex-shrink: 0;">
+             <textarea id="chat-input" class="ep-chat-textarea" placeholder="Ask about elections..." rows="1"></textarea>
+             <button id="chat-send" class="ep-chat-send">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:white;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+             </button>
+           </div>
+         </div>
+       </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  function initWidget() {
+    // --- NAVIGATION LOGIC ---
+    const navItems = document.querySelectorAll('.ep-nav-item');
+    const sections = document.querySelectorAll('.ep-section');
+    const pageTitle = document.getElementById('ep-page-title');
+    const pageSubtitle = document.getElementById('ep-page-subtitle');
+
+    const sectionMeta = {
+      overview: { title: 'Overview', sub: 'Your guide to democratic processes' },
+      timeline: { title: 'Timeline', sub: 'Phases of an election' },
+      topics: { title: 'Key Topics', sub: 'Deep dives into electoral concepts' },
+      quiz: { title: 'Quiz', sub: 'Test your election knowledge' },
+      glossary: { title: 'Glossary', sub: 'Electoral terms and definitions' },
+      askai: { title: 'Ask AI', sub: 'Chat with our election expert' }
+    };
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        
+        const target = item.getAttribute('data-target');
+        sections.forEach(s => s.classList.remove('active'));
+        document.getElementById(`sec-${target}`).classList.add('active');
+        
+        pageTitle.textContent = sectionMeta[target].title;
+        pageSubtitle.textContent = sectionMeta[target].sub;
+      });
+    });
+
+    document.getElementById('btn-explore-timeline').addEventListener('click', () => {
+       document.querySelector('.ep-nav-item[data-target="timeline"]').click();
+    });
+
+    // --- TIMELINE LOGIC ---
+    const tlChips = document.querySelectorAll('.ep-tl-chip');
+    const tlItems = document.querySelectorAll('.ep-tl-item');
+
+    tlChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        tlChips.forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        const phase = chip.getAttribute('data-phase');
+        
+        tlItems.forEach(item => {
+          if (phase === 'all' || item.getAttribute('data-phase') === phase) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // --- KEY TOPICS LOGIC ---
+    const topicsData = {
+      voter_registration: { title: 'Voter Registration', body: '<b>Auto registration:</b> Citizens are automatically registered upon turning 18.<br><b>Active registration:</b> Requires voters to submit forms themselves.<br><b>Same-day registration:</b> Allows registering at the polling place on election day.<br><br><b>Requirements:</b> Typically citizenship, age (18+), and residency.' },
+      ballot_types: { title: 'Ballot Types', body: '<b>Paper:</b> Hand-marked, highly auditable.<br><b>EVM (Electronic Voting Machines):</b> Fast counting, used widely in India.<br><b>Mail-in/absentee:</b> Sent via post, broadens access.<br><b>Provisional:</b> Given when voter eligibility is uncertain, counted after verification.' },
+      voting_systems: { title: 'Voting Systems', body: '<b>FPTP (First Past The Post):</b> Candidate with the most votes wins, even without a majority.<br><b>Proportional representation (PR):</b> Parties gain seats proportional to the number of votes cast for them.<br><b>Ranked-choice (RCV):</b> Voters rank candidates by preference.<br><b>Two-round:</b> Top two candidates face off if no one gets over 50%.' },
+      electoral_college: { title: 'Electoral College', body: '<b>How it works:</b> Indirect election system used in the US.<br><b>Winner-takes-all:</b> In most states, the popular vote winner gets all electoral votes.<br><b>270 needed:</b> A majority of the 538 total votes is required to win.<br><b>Controversy:</b> Can result in the popular vote winner losing the election.' },
+      election_integrity: { title: 'Election Integrity', body: '<b>Voter ID:</b> Requirements vary globally to prevent impersonation.<br><b>Chain of custody:</b> Secure handling of ballots from polling station to counting center.<br><b>Audits:</b> Verification of results against paper trails.<br><b>Observers:</b> Independent monitors who watch the voting and counting process.<br><b>Recounts:</b> Triggered when margins are extremely tight.' },
+      global_comparison: { title: 'Global Comparison', body: '<b>India:</b> Uses EVMs, largest democracy with ~900M voters.<br><b>US:</b> Decentralized system, Electoral College for president.<br><b>UK:</b> First-past-the-post system for Parliament.<br><b>Germany:</b> Mixed-member proportional representation.<br><b>Australia:</b> Compulsory voting, Ranked-choice voting (RCV).' }
+    };
+
+    const topicChips = document.querySelectorAll('.ep-topic-chip');
+    const topicContent = document.getElementById('topic-content');
+
+    topicChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        topicChips.forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        const topic = chip.getAttribute('data-topic');
+        const data = topicsData[topic];
+        topicContent.innerHTML = `
+          <div class="ep-card-title">${data.title}</div>
+          <div class="ep-card-body">${data.body}</div>
+        `;
+      });
+    });
+    // Initialize first topic
+    if(topicChips.length > 0) topicChips[0].click();
+
+    // --- QUIZ LOGIC ---
+    const quizQuestions = [
+      { q: "Electoral College votes needed to win US presidency", options: ["269", "270", "300", "538"], ans: 1, expl: "A majority of the 538 electoral votes (270) is needed to win." },
+      { q: "Country with compulsory voting", options: ["United States", "India", "Australia", "United Kingdom"], ans: 2, expl: "Australia enforces compulsory voting for federal elections." },
+      { q: "What is a primary election", options: ["The final election", "Party's internal candidate selection", "A local election only", "Voting by mail"], ans: 1, expl: "Primaries are used by political parties to choose their candidates for the general election." },
+      { q: "What is gerrymandering", options: ["Voter fraud", "Campaign financing", "Drawing district boundaries to favor a party", "A type of ballot"], ans: 2, expl: "Gerrymandering manipulates district boundaries to create an electoral advantage." },
+      { q: "Which system allocates seats by vote %", options: ["Proportional representation", "First-past-the-post", "Electoral College", "Two-round system"], ans: 0, expl: "Proportional representation ensures seats closely match the percentage of votes received." },
+      { q: "What is a provisional ballot", options: ["A test ballot", "Issued when registration can't be verified", "An early ballot", "A digital ballot"], ans: 1, expl: "Provisional ballots are kept separate and counted only after the voter's eligibility is confirmed." },
+      { q: "What does \"canvassing\" mean post-election", options: ["Campaigning", "Official ballot review", "Calling voters", "Swearing in"], ans: 1, expl: "Post-election canvassing is the official tally and review of election results." },
+      { q: "India uses which voting method", options: ["Ranked-choice", "Mail-in only", "Electronic Voting Machines (EVMs)", "Caucus"], ans: 2, expl: "India uses EVMs to handle its massive electorate efficiently." }
+    ];
+
+    let qIdx = 0;
+    let score = 0;
+    const qText = document.getElementById('quiz-q-text');
+    const qOptions = document.getElementById('quiz-options');
+    const qFeedback = document.getElementById('quiz-feedback');
+    const qNext = document.getElementById('quiz-next');
+    const qProgress = document.getElementById('quiz-progress-bar');
+    const qStatus = document.getElementById('quiz-status');
+    const qScoreCount = document.getElementById('quiz-score-count');
+    const quizDone = document.getElementById('quiz-done');
+    const quizActive = document.getElementById('quiz-active');
+    const quizFinalScore = document.getElementById('quiz-final-score');
+    const quizFinalMsg = document.getElementById('quiz-final-msg');
+
+    function loadQuestion() {
+      const q = quizQuestions[qIdx];
+      qText.textContent = q.q;
+      qOptions.innerHTML = '';
+      qFeedback.style.display = 'none';
+      qNext.style.display = 'none';
+      qStatus.textContent = `Question ${qIdx + 1} of 8`;
+      qProgress.style.width = `${((qIdx) / 8) * 100}%`;
+      
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'ep-quiz-option';
+        btn.textContent = opt;
+        btn.onclick = () => selectOption(idx, btn);
+        qOptions.appendChild(btn);
+      });
+    }
+
+    function selectOption(idx, btn) {
+      const q = quizQuestions[qIdx];
+      const btns = qOptions.querySelectorAll('button');
+      btns.forEach(b => b.disabled = true);
+      
+      qFeedback.style.display = 'block';
+      qNext.style.display = 'block';
+      
+      if (idx === q.ans) {
+        btn.classList.add('correct');
+        qFeedback.className = 'ep-quiz-feedback success';
+        qFeedback.innerHTML = `<b>Correct!</b> ${q.expl}`;
+        score++;
+        qScoreCount.textContent = score;
+      } else {
+        btn.classList.add('wrong');
+        btns[q.ans].classList.add('correct');
+        qFeedback.className = 'ep-quiz-feedback danger';
+        qFeedback.innerHTML = `<b>Incorrect.</b> ${q.expl}`;
+      }
+    }
+
+    qNext.onclick = () => {
+      qIdx++;
+      if (qIdx < quizQuestions.length) {
+        loadQuestion();
+      } else {
+        showQuizDone();
+      }
+    };
+
+    function showQuizDone() {
+      quizActive.style.display = 'none';
+      quizDone.style.display = 'block';
+      quizFinalScore.textContent = `${score}/8`;
+      qProgress.style.width = `100%`;
+      
+      let msg = '';
+      if (score <= 1) msg = "Keep studying";
+      else if (score <= 3) msg = "Good start";
+      else if (score <= 5) msg = "Solid knowledge";
+      else if (score <= 7) msg = "Excellent!";
+      else msg = "Perfect score!";
+      quizFinalMsg.textContent = msg;
+    }
+
+    document.getElementById('quiz-retake').onclick = () => {
+      qIdx = 0; score = 0;
+      qScoreCount.textContent = score;
+      quizActive.style.display = 'block';
+      quizDone.style.display = 'none';
+      loadQuestion();
+    };
+
+    loadQuestion();
+
+    // --- GLOSSARY LOGIC ---
+    const glossaryTerms = [
+      { term: "Ballot", def: "The official device (paper or electronic) used to cast a vote." },
+      { term: "By-election", def: "An election held to fill a political office that has become vacant between general elections." },
+      { term: "Canvassing", def: "The official post-election review of ballots to ensure accuracy before certification." },
+      { term: "Caucus", def: "A local meeting where registered members of a political party gather to vote for their preferred candidate." },
+      { term: "Certification", def: "The official sign-off on election results, confirming the winners." },
+      { term: "Coalition government", def: "A government formed jointly by more than one political party, common in PR systems." },
+      { term: "Electoral College", def: "The body of electors that officially elects the US president." },
+      { term: "Franchise", def: "The legal right to vote." },
+      { term: "General election", def: "A regular election involving all or most constituencies of a state or nation." },
+      { term: "Gerrymandering", def: "Manipulating electoral district boundaries to give an unfair advantage to a political party." },
+      { term: "Incumbent", def: "The current holder of a political office." },
+      { term: "Mandate", def: "The authority granted by a constituency to act as its representative." },
+      { term: "Polling station", def: "The location where voters go to cast their ballots." },
+      { term: "Precinct", def: "One of several districts into which a city or town is divided for voting." },
+      { term: "Primary election", def: "An election that narrows the field of candidates before a general election." },
+      { term: "Proportional representation", def: "An electoral system in which parties gain seats in proportion to the number of votes cast for them." },
+      { term: "Provisional ballot", def: "A ballot used when there are questions about a voter's eligibility." },
+      { term: "Ranked-choice voting", def: "An electoral system in which voters rank candidates by preference." },
+      { term: "Recount", def: "A repeat tabulation of votes cast in an election to ensure accuracy." },
+      { term: "Referendum", def: "A direct vote by the electorate on a particular proposal or issue." },
+      { term: "Runoff election", def: "A second election held to determine a winner when no candidate receives a required majority." },
+      { term: "Suffrage", def: "The right to vote in political elections." },
+      { term: "Swing state", def: "A US state where the two major political parties have similar levels of support among voters." },
+      { term: "Voter suppression", def: "Strategy used to influence the outcome of an election by discouraging or preventing specific groups from voting." },
+      { term: "Voter turnout", def: "The percentage of eligible voters who cast a ballot in an election." }
+    ];
+
+    const glossaryList = document.getElementById('glossary-list');
+    const glossarySearch = document.getElementById('glossary-search');
+
+    function renderGlossary(filter = '') {
+      glossaryList.innerHTML = '';
+      const termLower = filter.toLowerCase();
+      glossaryTerms.forEach(item => {
+        if (item.term.toLowerCase().includes(termLower) || item.def.toLowerCase().includes(termLower)) {
+          const div = document.createElement('div');
+          div.className = 'ep-term';
+          div.innerHTML = `<span class="ep-term-name">${item.term}:</span> <span class="ep-term-def">${item.def}</span>`;
+          glossaryList.appendChild(div);
+        }
+      });
+    }
+
+    glossarySearch.addEventListener('input', (e) => renderGlossary(e.target.value));
+    renderGlossary();
+
+    // --- ASK AI LOGIC ---
+    let ANTHROPIC_API_KEY = "";
+    const apiKeyContainer = document.getElementById('api-key-container');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const apiKeySave = document.getElementById('api-key-save');
+
+    apiKeySave.addEventListener('click', () => {
+      if (apiKeyInput.value.trim()) {
+        ANTHROPIC_API_KEY = apiKeyInput.value.trim();
+        apiKeyContainer.style.display = 'none';
+      }
+    });
+
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const aiQuickChips = document.querySelectorAll('.ep-ai-chip');
+
+    let messagesHistory = [];
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+    
+    function parseMarkdown(text) {
+      let escaped = escapeHTML(text);
+      escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+      escaped = escaped.replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>');
+      escaped = escaped.replace(/^[\-\*]\s+(.*)$/gm, '<li>$1</li>');
+      escaped = escaped.replace(/(<li>.*<\/li>\n?)+/g, match => `<ul>${match}</ul>`);
+      escaped = escaped.replace(/\n/g, '<br>');
+      escaped = escaped.replace(/<\/ul><br>/g, '</ul>');
+      escaped = escaped.replace(/<br><ul>/g, '<ul>');
+      return escaped;
+    }
+
+    function appendMessage(role, text) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'ep-message';
+      
+      if (role === 'user') {
+        msgDiv.innerHTML = `
+          <div class="ep-avatar ep-avatar-user">You</div>
+          <div class="ep-msg-bubble">${escapeHTML(text)}</div>
+        `;
+      } else {
+        msgDiv.innerHTML = `
+          <div class="ep-avatar ep-avatar-ai">AI</div>
+          <div class="ep-msg-bubble">${parseMarkdown(text)}</div>
+        `;
+      }
+      
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTyping() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'ep-message ep-typing-msg';
+      typingDiv.innerHTML = `
+        <div class="ep-avatar ep-avatar-ai">AI</div>
+        <div class="ep-msg-bubble ep-typing">
+          <div class="ep-dot"></div><div class="ep-dot"></div><div class="ep-dot"></div>
+        </div>
+      `;
+      chatMessages.appendChild(typingDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return typingDiv;
+    }
+
+    async function sendAI(text) {
+      if (!text.trim()) return;
+      if (!ANTHROPIC_API_KEY) {
+        alert("Please enter your Anthropic API Key first.");
+        return;
+      }
+      
+      appendMessage('user', text);
+      messagesHistory.push({ role: 'user', content: text });
+      
+      chatInput.value = '';
+      chatSend.disabled = true;
+      chatInput.disabled = true;
+      
+      const typingIndicator = showTyping();
+      
+      try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 1000,
+            system: "You are a friendly, expert election process educator. Help users understand elections, voting, democratic processes, timelines, and civic participation worldwide. Be clear, educational, and nonpartisan. Use plain language. Keep responses under 200 words. Use numbered lists for steps, bullet points for features. Bold key terms using term. Default to general democratic processes or specify the country if the user mentions one. Never use markdown headers.",
+            messages: messagesHistory
+          })
+        });
+        
+        if (!response.ok) {
+          const errBody = await response.text();
+          throw new Error(`API Error: ${response.status} - ${errBody}`);
+        }
+        
+        const data = await response.json();
+        const aiText = data.content[0].text;
+        
+        typingIndicator.remove();
+        appendMessage('assistant', aiText);
+        messagesHistory.push({ role: 'assistant', content: aiText });
+        
+      } catch (err) {
+        typingIndicator.remove();
+        appendMessage('assistant', "Sorry, there was an error connecting to the AI. " + err.message);
+        console.error(err);
+      } finally {
+        chatSend.disabled = false;
+        chatInput.disabled = false;
+        chatInput.focus();
+      }
+    }
+
+    chatSend.addEventListener('click', () => sendAI(chatInput.value));
+
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAI(chatInput.value);
+      }
+    });
+
+    aiQuickChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelector('.ep-nav-item[data-target="askai"]').click();
+        sendAI(chip.getAttribute('data-query'));
+      });
+    });
+  } // end initWidget
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWidget);
+  } else {
+    initWidget();
+  }
+})();
+</script>
+</body>
+</html>
